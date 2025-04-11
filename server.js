@@ -12,7 +12,7 @@ const app = express();
 // Init Middleware
 app.use(express.json({ extended: false }));
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://ai-bot-eight-kappa.vercel.app/login'],
+  origin: ['http://localhost:3000', 'https://ai-bot-eight-kappa.vercel.app'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
