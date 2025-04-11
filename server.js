@@ -11,8 +11,11 @@ const app = express();
 
 // Init Middleware
 app.use(express.json({ extended: false }));
-app.use(cors());
-
+app.use(cors({
+  origin: ['http://localhost:3000', 'https://ai-bot-eight-kappa.vercel.app/login'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
 // Define Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/chat', require('./routes/chat'));
