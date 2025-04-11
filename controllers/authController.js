@@ -6,9 +6,7 @@
  require('dotenv').config();
  
  const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
- 
- // Generate JWT
- const generateToken = (user) => {
+  const generateToken = (user) => {
    return jwt.sign(
      { user: { id: user.id } },
      process.env.JWT_SECRET,
@@ -82,55 +80,49 @@
  };
  
  // Google Sign In
-// Update this function in server/controllers/authController.js
-exports.googleLogin = async (req, res) => {
-  // Modern Google OAuth returns credential, not tokenId
-  const { credential } = req.body;
-  
-  if (!credential) {
-    return res.status(400).json({ msg: 'No Google credential provided' });
-  }
-
-  try {
-    // Verify Google token using the credential
-    const ticket = await googleClient.verifyIdToken({
-      idToken: credential,
-      audience: process.env.GOOGLE_CLIENT_ID
-    });
-
-    const { email_verified, name, email, sub: googleId } = ticket.getPayload();
-
-    if (!email_verified) {
-      return res.status(400).json({ msg: 'Google email not verified' });
-    }
-
-    // Check if user exists
-    let user = await User.findOne({ email });
-
-    if (!user) {
-      // Create new user if doesn't exist
-      user = new User({
-        name,
-        email,
-        googleId
-      });
-      await user.save();
-    } else {
-      // Update googleId if user exists but didn't have googleId
-      if (!user.googleId) {
-        user.googleId = googleId;
-        await user.save();
-      }
-    }
-
-    // Return JWT
-    const token = generateToken(user);
-    res.json({ token });
-  } catch (err) {
-    console.error('Google login error:', err.message);
-    res.status(500).send('Server error');
-  }
-};
+ exports.googleLogin = async (req, res) => {
+   const { tokenId } = req.body;
+ 
+   try {
+     // Verify Google token
+     const ticket = await googleClient.verifyIdToken({
+       idToken: tokenId,
+       audience: process.env.GOOGLE_CLIENT_ID
+     });
+ 
+     const { email_verified, name, email, sub: googleId } = ticket.getPayload();
+ 
+     if (!email_verified) {
+       return res.status(400).json({ msg: 'Google email not verified' });
+     }
+ 
+     // Check if user exists
+     let user = await User.findOne({ email });
+ 
+     if (!user) {
+       // Create new user if doesn't exist
+       user = new User({
+         name,
+         email,
+         googleId
+       });
+       await user.save();
+     } else {
+       // Update googleId if user exists but didn't have googleId
+       if (!user.googleId) {
+         user.googleId = googleId;
+         await user.save();
+       }
+     }
+ 
+     // Return JWT
+     const token = generateToken(user);
+     res.json({ token });
+   } catch (err) {
+     console.error('Google login error:', err);
+     res.status(500).send('Server error');
+   }
+ };
  
  // Get current user
  exports.getMe = async (req, res) => {
